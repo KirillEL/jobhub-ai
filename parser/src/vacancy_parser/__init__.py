@@ -1,0 +1,2 @@
+"""Vacancy parser package."""
+

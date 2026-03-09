@@ -1,0 +1,90 @@
+@use './styles/variables' as v;
+
+:root {
+  font-family: 'Plus Jakarta Sans', v.$font-stack;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:root,
+[data-theme='light'] {
+  --bg: #f0f4ff;
+  --surface: #ffffff;
+  --surface-2: #f8faff;
+  --surface-3: #eef2fc;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --border: #cbd5e8;
+  --border-subtle: #e2e8f4;
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+  --accent-soft: #818cf8;
+  --accent-bg: #eef2ff;
+  --accent-text: #4338ca;
+  --accent-ring: rgba(99, 102, 241, 0.35);
+  --gradient-accent: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --gradient-hero: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 50%, #fdf4ff 100%);
+  --danger-bg: #fef2f2;
+  --danger-text: #b91c1c;
+  --danger-border: #fecaca;
+  --error: #dc2626;
+  --success: #059669;
+  --success-border: #a7f3d0;
+  --shadow-soft: 0 4px 20px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow-medium: 0 10px 32px rgba(99, 102, 241, 0.12), 0 4px 12px rgba(15, 23, 42, 0.06);
+  --shadow-strong: 0 24px 48px rgba(15, 23, 42, 0.12), 0 8px 24px rgba(99, 102, 241, 0.08);
+}
+
+[data-theme='dark'] {
+  --bg: #0c0f1a;
+  --surface: #151923;
+  --surface-2: #1a1f2e;
+  --surface-3: #222938;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --border: #2d3548;
+  --border-subtle: #252b3b;
+  --accent: #818cf8;
+  --accent-hover: #a5b4fc;
+  --accent-soft: #6366f1;
+  --accent-bg: #1e1b4b;
+  --accent-text: #c7d2fe;
+  --accent-ring: rgba(129, 140, 248, 0.4);
+  --gradient-accent: linear-gradient(135deg, #6366f1 0%, #a78bfa 100%);
+  --gradient-hero: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+  --danger-bg: #450a0a;
+  --danger-text: #fca5a5;
+  --danger-border: #7f1d1d;
+  --error: #f87171;
+  --success: #34d399;
+  --success-border: #064e3b;
+  --shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.35), 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-medium: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-strong: 0 24px 56px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+a {
+  color: inherit;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
