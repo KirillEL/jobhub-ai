@@ -11,6 +11,6 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install --upgrade pip && pip install -r /app/requirements.txt
 
 COPY src /app/src
-COPY README.md /app/README.md
 
-CMD ["python", "-m", "vacancy_parser.cli", "scheduler"]
+EXPOSE 8080
+CMD ["uvicorn", "vacancy_parser.api.main:app", "--host", "0.0.0.0", "--port", "8080"]

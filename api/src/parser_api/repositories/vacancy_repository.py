@@ -231,6 +231,23 @@ class VacancyRepository:
         await self.db.commit()
         return int(result.rowcount or 0)
 
+    async def list_titles_urls_by_parse_job(
+        self, user_id: int, parse_job_id: int, limit: int = 5
+    ) -> list[tuple[str, str]]:
+        """Вакансии, добавленные в рамках этого parse job (для отчёта в Telegram)."""
+        stmt = (
+            select(Vacancy.title, Vacancy.url)
+            .join(UserVacancy, UserVacancy.vacancy_external_id == Vacancy.external_id)
+            .where(
+                UserVacancy.user_id == user_id,
+                UserVacancy.parse_job_id == parse_job_id,
+            )
+            .order_by(UserVacancy.ingested_at.desc())
+            .limit(limit)
+        )
+        rows = (await self.db.execute(stmt)).all()
+        return [(row[0] or "", row[1] or "") for row in rows]
+
 
     async def _upsert_skills_and_relations(self, vacancies: list[dict[str, Any]]) -> None:
         all_skills = sorted(

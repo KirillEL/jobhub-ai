@@ -1,0 +1,25 @@
+services:
+  postgres:
+    extends:
+      file: api/docker-compose.yml
+      service: postgres
+
+  api:
+    extends:
+      file: api/docker-compose.yml
+      service: api
+    env_file:
+      - .env
+
+  parser:
+    extends:
+      file: api/docker-compose.yml
+      service: parser
+    
+  web:
+    extends:
+      file: web/docker-compose.yml
+      service: web
+
+volumes:
+  postgres_data:

@@ -6,6 +6,8 @@ import type {
   ParseJobStatus,
   ParseResponse,
   RegisterPayload,
+  TelegramReportSettings,
+  TelegramReportSettingsUpdate,
   UpdateProfilePayload,
   UserProfile,
   VacancyCleanupResponse,
@@ -403,5 +405,33 @@ export async function clearMyVacancies(accessToken: string): Promise<VacancyClea
     fallbackError: translate('errors.api.vacancyCleanupFailed'),
     allowAuthRefresh: true,
     contentType: false,
+  })
+}
+
+export async function getTelegramReportSettings(
+  accessToken: string,
+  options?: { signal?: AbortSignal },
+): Promise<TelegramReportSettings> {
+  return requestJson<TelegramReportSettings>({
+    path: '/api/v1/settings/telegram-report',
+    accessToken,
+    fallbackError: translate('errors.api.settingsFetchFailed'),
+    allowAuthRefresh: true,
+    contentType: false,
+    signal: options?.signal,
+  })
+}
+
+export async function updateTelegramReportSettings(
+  payload: TelegramReportSettingsUpdate,
+  accessToken: string,
+): Promise<TelegramReportSettings> {
+  return requestJson<TelegramReportSettings>({
+    path: '/api/v1/settings/telegram-report',
+    method: 'PUT',
+    accessToken,
+    body: payload,
+    fallbackError: translate('errors.api.settingsUpdateFailed'),
+    allowAuthRefresh: true,
   })
 }

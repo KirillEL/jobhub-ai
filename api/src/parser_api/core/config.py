@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -42,6 +43,18 @@ class Settings(BaseSettings):
     telegram_bot_token: str | None = None
     telegram_chat_id: str | None = None
     telegram_api_base_url: str = "https://api.telegram.org"
+
+    @field_validator("daily_check_user_id", mode="before")
+    @classmethod
+    def empty_str_to_none_user_id(cls, v: str | int | None) -> int | None:
+        if v is None or v == "":
+            return None
+        if isinstance(v, int):
+            return v
+        s = str(v).strip()
+        if not s:
+            return None
+        return int(s)
 
     @property
     def cors_allow_origins(self) -> list[str]:

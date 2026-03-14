@@ -100,3 +100,23 @@ export interface LoginPayload {
 export interface UpdateProfilePayload {
   full_name?: string | null
 }
+
+export interface TelegramReportSettings {
+  enabled: boolean
+  telegram_chat_id: string | null
+  report_hour: number
+  report_minute: number
+  report_timezone: string
+  report_query: string
+  report_pages: number
+}
+
+export interface TelegramReportSettingsUpdate {
+  enabled: boolean
+  telegram_chat_id?: string | null
+  report_hour: number
+  report_minute: number
+  report_timezone: string
+  report_query: string
+  report_pages: number
+}

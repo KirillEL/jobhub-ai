@@ -77,6 +77,30 @@ class User(Base):
     updated_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=False)
     parse_jobs: Mapped[list["ParseJob"]] = relationship(back_populates="user")
     vacancy_links: Mapped[list["UserVacancy"]] = relationship(back_populates="user")
+    telegram_report_settings: Mapped[Optional["TelegramReportSettings"]] = relationship(
+        back_populates="user", uselist=False
+    )
+
+
+class TelegramReportSettings(Base):
+    """Настройки ежедневного отчёта в Telegram (на пользователя)."""
+    __tablename__ = "telegram_report_settings"
+
+    user_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    telegram_chat_id: Mapped[Optional[str]] = mapped_column(Text)
+    report_hour: Mapped[int] = mapped_column(BigInteger, nullable=False, default=9)
+    report_minute: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+    report_timezone: Mapped[str] = mapped_column(Text, nullable=False, default="Europe/Moscow")
+    report_query: Mapped[str] = mapped_column(Text, nullable=False, default="python backend")
+    report_pages: Mapped[int] = mapped_column(BigInteger, nullable=False, default=1)
+    last_run_at: Mapped[Optional[DateTime]] = mapped_column(DateTime(timezone=True))
+
+    user: Mapped["User"] = relationship(back_populates="telegram_report_settings")
 
 
 class RefreshToken(Base):
