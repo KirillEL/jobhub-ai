@@ -31,6 +31,7 @@ export default function VacanciesPage() {
   const [exportMode, setExportMode] = useState<ExportMode>('visible')
   const [sortKey, setSortKey] = useState<SortKey>('title')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   const pageRows = useMemo(() => {
     const rows = vacancies.items.map((item) => ({
@@ -70,10 +71,9 @@ export default function VacanciesPage() {
       setSelectedVacancy(null)
       return
     }
-
     setSelectedVacancy((current) => {
-      if (!current) return vacancies.items[0]
-      return vacancies.items.find((item) => item.external_id === current.external_id) ?? vacancies.items[0]
+      if (!current) return null
+      return vacancies.items.find((item) => item.external_id === current.external_id) ?? null
     })
   }, [vacancies.items])
 
@@ -206,58 +206,97 @@ export default function VacanciesPage() {
     }
   }
 
+  const filterTags = [
+    vacancies.filters.search.trim() && { key: 'search', label: vacancies.filters.search.trim() },
+    vacancies.filters.city.trim() && { key: 'city', label: vacancies.filters.city.trim() },
+    vacancies.filters.experience.trim() && {
+      key: 'exp',
+      label: vacancies.filters.experience.trim(),
+    },
+    vacancies.filters.limit !== 50 && { key: 'limit', label: String(vacancies.filters.limit) },
+  ].filter(Boolean) as { key: string; label: string }[]
+
   return (
     <main className="layout vacancies-page">
       <PageHeader title={t('vacancies.title')} subtitle={t('vacancies.subtitle')} />
 
-      <Card>
-        <form className="filters-grid" onSubmit={(event) => event.preventDefault()}>
-          <label>
-            {t('vacancies.filters.search')}
-            <input
-              value={vacancies.filters.search}
-              onChange={(event) => vacancies.updateFilter('search', event.target.value)}
-              placeholder={t('vacancies.filters.searchPlaceholder')}
-            />
-          </label>
-          <label>
-            {t('vacancies.filters.city')}
-            <input
-              value={vacancies.filters.city}
-              onChange={(event) => vacancies.updateFilter('city', event.target.value)}
-              placeholder={t('vacancies.filters.cityPlaceholder')}
-            />
-          </label>
-          <label>
-            {t('vacancies.filters.experience')}
-            <input
-              value={vacancies.filters.experience}
-              onChange={(event) => vacancies.updateFilter('experience', event.target.value)}
-              placeholder={t('vacancies.filters.experiencePlaceholder')}
-            />
-          </label>
-          <label>
-            {t('vacancies.filters.limit')}
-            <input
-              type="number"
-              min={1}
-              max={500}
-              value={vacancies.filters.limit}
-              onChange={(event) => vacancies.updateFilter('limit', Number(event.target.value))}
-            />
-          </label>
-          <Button
-            type="button"
-            onClick={() => void vacancies.reload(0)}
-            disabled={vacancies.loading || vacancies.hasErrors}
-          >
-            {t('common.apply')}
-          </Button>
-        </form>
-        {vacancies.errors.search ? <p className="field-error">{vacancies.errors.search}</p> : null}
-        {vacancies.errors.city ? <p className="field-error">{vacancies.errors.city}</p> : null}
-        {vacancies.errors.experience ? <p className="field-error">{vacancies.errors.experience}</p> : null}
-        {vacancies.errors.limit ? <p className="field-error">{vacancies.errors.limit}</p> : null}
+      <Card className={`filters-panel ${filtersOpen ? 'is-open' : ''}`}>
+        <button
+          type="button"
+          className="filters-panel__toggle"
+          onClick={() => setFiltersOpen((open) => !open)}
+          aria-expanded={filtersOpen}
+          aria-controls="filters-panel-body"
+        >
+          <span className="filters-panel__chevron" aria-hidden>
+            {filtersOpen ? '▼' : '▶'}
+          </span>
+          <span className="filters-panel__title">{t('vacancies.filtersPanelTitle')}</span>
+          {!filtersOpen && (
+            <span className="filters-panel__summary">
+              {filterTags.length > 0
+                ? filterTags.map((tag) => (
+                    <span key={tag.key} className="filters-panel__tag">
+                      {tag.label}
+                    </span>
+                  ))
+                : (
+                    <span className="filters-panel__tag filters-panel__tag--empty">
+                      {t('vacancies.filtersSummaryNone')}
+                    </span>
+                  )}
+            </span>
+          )}
+        </button>
+        <div id="filters-panel-body" className="filters-panel__body" hidden={!filtersOpen}>
+          <form className="filters-grid" onSubmit={(event) => event.preventDefault()}>
+            <label>
+              {t('vacancies.filters.search')}
+              <input
+                value={vacancies.filters.search}
+                onChange={(event) => vacancies.updateFilter('search', event.target.value)}
+                placeholder={t('vacancies.filters.searchPlaceholder')}
+              />
+            </label>
+            <label>
+              {t('vacancies.filters.city')}
+              <input
+                value={vacancies.filters.city}
+                onChange={(event) => vacancies.updateFilter('city', event.target.value)}
+                placeholder={t('vacancies.filters.cityPlaceholder')}
+              />
+            </label>
+            <label>
+              {t('vacancies.filters.experience')}
+              <input
+                value={vacancies.filters.experience}
+                onChange={(event) => vacancies.updateFilter('experience', event.target.value)}
+                placeholder={t('vacancies.filters.experiencePlaceholder')}
+              />
+            </label>
+            <label>
+              {t('vacancies.filters.limit')}
+              <input
+                type="number"
+                min={1}
+                max={500}
+                value={vacancies.filters.limit}
+                onChange={(event) => vacancies.updateFilter('limit', Number(event.target.value))}
+              />
+            </label>
+            <Button
+              type="button"
+              onClick={() => void vacancies.reload(0)}
+              disabled={vacancies.loading || vacancies.hasErrors}
+            >
+              {t('common.apply')}
+            </Button>
+          </form>
+          {vacancies.errors.search ? <p className="field-error">{vacancies.errors.search}</p> : null}
+          {vacancies.errors.city ? <p className="field-error">{vacancies.errors.city}</p> : null}
+          {vacancies.errors.experience ? <p className="field-error">{vacancies.errors.experience}</p> : null}
+          {vacancies.errors.limit ? <p className="field-error">{vacancies.errors.limit}</p> : null}
+        </div>
       </Card>
 
       <section className="vacancies-workspace">
@@ -268,8 +307,8 @@ export default function VacanciesPage() {
               {vacancies.totalPages}
             </p>
             <div className="table-tools__actions">
-              <label>
-                {t('common.exportMode')}
+              <label title={t('common.exportMode')}>
+                {t('common.exportModeShort')}
                 <select
                   value={exportMode}
                   onChange={(event) => setExportMode(event.target.value as ExportMode)}
@@ -279,32 +318,39 @@ export default function VacanciesPage() {
                   <option value="full">{t('common.exportModeFull')}</option>
                 </select>
               </label>
-              <Button type="button" variant="secondary" onClick={handleExportCsv} disabled={!pageRows.length}>
-                {t('common.exportCsvPage')}
+              <Button type="button" variant="secondary" onClick={handleExportCsv} disabled={!pageRows.length} title={t('common.exportCsvPage')}>
+                {t('common.exportCsvPageShort')}
               </Button>
               <Button
                 type="button"
                 variant="secondary"
                 onClick={() => void handleExportAllCsv()}
                 disabled={isExportingAll || vacancies.loading || vacancies.total === 0}
+                title={t('common.exportCsvAll')}
               >
-                {isExportingAll ? t('common.exportInProgress') : t('common.exportCsvAll')}
+                {isExportingAll ? t('common.exportInProgress') : t('common.exportCsvAllShort')}
               </Button>
               <Button
                 type="button"
                 variant="secondary"
+                className="table-tools__nav"
                 onClick={() => void vacancies.goToPage(vacancies.currentPage - 1)}
                 disabled={vacancies.loading || vacancies.currentPage <= 1}
+                title={t('common.previous')}
+                aria-label={t('common.previous')}
               >
-                {t('common.previous')}
+                ‹
               </Button>
               <Button
                 type="button"
                 variant="secondary"
+                className="table-tools__nav"
                 onClick={() => void vacancies.goToPage(vacancies.currentPage + 1)}
                 disabled={vacancies.loading || vacancies.currentPage >= vacancies.totalPages}
+                title={t('common.next')}
+                aria-label={t('common.next')}
               >
-                {t('common.next')}
+                ›
               </Button>
             </div>
           </div>
@@ -377,7 +423,7 @@ export default function VacanciesPage() {
                         />
                       </button>
                     </th>
-                    <th>{t('vacancies.table.details')}</th>
+                    <th className="table-col-details">{t('vacancies.table.details')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -391,17 +437,18 @@ export default function VacanciesPage() {
                       <td>{row.company}</td>
                       <td>{row.city}</td>
                       <td>{row.salary}</td>
-                      <td>
-                        <Button
-                          type="button"
-                          variant="secondary"
+                      <td className="table-col-details">
+                        <span
+                          className="row-detail-trigger"
                           onClick={(event) => {
                             event.stopPropagation()
                             setSelectedVacancy(row.vacancy)
                           }}
+                          title={t('common.open')}
+                          aria-label={t('common.open')}
                         >
-                          {selectedVacancy?.external_id === row.id ? t('common.selected') : t('common.open')}
-                        </Button>
+                          {selectedVacancy?.external_id === row.id ? '✓' : '→'}
+                        </span>
                       </td>
                     </tr>
                   ))}
@@ -416,66 +463,82 @@ export default function VacanciesPage() {
           )}
         </Card>
 
-        <Card className="vacancies-preview-card">
+        <div
+          className={`preview-drawer-backdrop ${selectedVacancy ? 'is-visible' : ''}`}
+          aria-hidden
+          onClick={() => setSelectedVacancy(null)}
+        />
+        <aside
+          className={`preview-drawer ${selectedVacancy ? 'is-open' : ''}`}
+          aria-label={t('vacancies.preview.drawerLabel')}
+        >
           {selectedVacancy ? (
-            <div className="preview-panel">
-              <div className="preview-panel__header">
-                <div>
-                  <h3>{selectedVacancy.title}</h3>
-                  <p className="subtitle">{selectedVacancy.company ?? t('vacancies.preview.companyMissing')}</p>
+            <>
+              <div className="preview-drawer__header">
+                <div className="preview-drawer__title-block">
+                  <h3 className="preview-drawer__title">{selectedVacancy.title}</h3>
+                  <p className="preview-drawer__subtitle">
+                    {selectedVacancy.company ?? t('vacancies.preview.companyMissing')}
+                  </p>
                 </div>
-                <span className="pill">{t('common.id')}: {selectedVacancy.external_id}</span>
-              </div>
-              <div className="preview-panel__tags">
-                <span className="preview-panel__tag">
-                  {t('vacancies.preview.city')}: {selectedVacancy.city ?? t('common.notSpecifiedMasc')}
-                </span>
-                <span className="preview-panel__tag">
-                  {t('vacancies.preview.experience')}: {selectedVacancy.experience ?? t('common.notSpecifiedMasc')}
-                </span>
-                <span className="preview-panel__tag">
-                  {t('vacancies.preview.schedule')}: {selectedVacancy.schedule ?? t('common.notSpecifiedMasc')}
-                </span>
-                <span className="preview-panel__tag">
-                  {t('vacancies.preview.salary')}: {formatSalary(selectedVacancy)}
-                </span>
-              </div>
-              <div className="preview-panel__grid">
-                <div className="preview-panel__meta-card">
-                  <strong>{t('vacancies.preview.publishDate')}</strong>
-                  <span>
-                    {selectedVacancy.published_at
-                      ? new Date(selectedVacancy.published_at).toLocaleDateString('ru-RU')
-                      : t('common.notSpecified')}
-                  </span>
-                </div>
-                <div className="preview-panel__meta-card">
-                  <strong>{t('vacancies.preview.sourceLink')}</strong>
-                  <a href={selectedVacancy.url} target="_blank" rel="noreferrer">
-                    {t('common.openInNewTab')}
-                  </a>
-                </div>
-              </div>
-              <div className="preview-panel__description">
-                <h4>{t('vacancies.preview.descriptionTitle')}</h4>
-                <p>{selectedVacancy.description?.trim() || t('vacancies.preview.descriptionMissing')}</p>
-              </div>
-              <div className="preview-panel__actions">
-                <Button
+                <button
                   type="button"
-                  onClick={() => window.open(selectedVacancy.url, '_blank', 'noopener,noreferrer')}
+                  className="preview-drawer__close"
+                  onClick={() => setSelectedVacancy(null)}
+                  aria-label={t('common.close')}
                 >
-                  {t('common.goToVacancy')}
-                </Button>
+                  <span className="preview-drawer__close-icon" aria-hidden />
+                </button>
               </div>
-            </div>
-          ) : (
-            <EmptyState
-              title={t('vacancies.preview.selectTitle')}
-              description={t('vacancies.preview.selectDescription')}
-            />
-          )}
-        </Card>
+              <div className="preview-drawer__body">
+                <div className="preview-panel">
+                  <div className="preview-panel__tags">
+                    <span className="preview-panel__tag">
+                      {t('vacancies.preview.city')}: {selectedVacancy.city ?? t('common.notSpecifiedMasc')}
+                    </span>
+                    <span className="preview-panel__tag">
+                      {t('vacancies.preview.experience')}: {selectedVacancy.experience ?? t('common.notSpecifiedMasc')}
+                    </span>
+                    <span className="preview-panel__tag">
+                      {t('vacancies.preview.schedule')}: {selectedVacancy.schedule ?? t('common.notSpecifiedMasc')}
+                    </span>
+                    <span className="preview-panel__tag">
+                      {t('vacancies.preview.salary')}: {formatSalary(selectedVacancy)}
+                    </span>
+                  </div>
+                  <div className="preview-panel__grid">
+                    <div className="preview-panel__meta-card">
+                      <strong>{t('vacancies.preview.publishDate')}</strong>
+                      <span>
+                        {selectedVacancy.published_at
+                          ? new Date(selectedVacancy.published_at).toLocaleDateString('ru-RU')
+                          : t('common.notSpecified')}
+                      </span>
+                    </div>
+                    <div className="preview-panel__meta-card">
+                      <strong>{t('vacancies.preview.sourceLink')}</strong>
+                      <a href={selectedVacancy.url} target="_blank" rel="noreferrer">
+                        {t('common.openInNewTab')}
+                      </a>
+                    </div>
+                  </div>
+                  <div className="preview-panel__description">
+                    <h4>{t('vacancies.preview.descriptionTitle')}</h4>
+                    <p>{selectedVacancy.description?.trim() || t('vacancies.preview.descriptionMissing')}</p>
+                  </div>
+                  <div className="preview-panel__actions">
+                    <Button
+                      type="button"
+                      onClick={() => window.open(selectedVacancy.url, '_blank', 'noopener,noreferrer')}
+                    >
+                      {t('common.goToVacancy')}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : null}
+        </aside>
       </section>
     </main>
   )

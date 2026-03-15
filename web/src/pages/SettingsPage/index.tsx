@@ -5,6 +5,8 @@ import {
   updateTelegramReportSettings,
 } from '../../api.ts'
 import { useAuth } from '../../auth/AuthContext'
+import ToastStack from '../../components/common/ToastStack'
+import { useToasts } from '../../hooks/useToasts'
 import { useI18n } from '../../shared/i18n'
 import Button from '../../shared/ui/Button'
 import Card from '../../shared/ui/Card'
@@ -15,17 +17,15 @@ import type { TelegramReportSettingsUpdate } from '../../types'
 import { validateFullName } from '../../utils/validation'
 import './styles.scss'
 
-type MessageState = { key: string; params?: Record<string, string | number> } | null
-
 export default function SettingsPage() {
   const { accessToken, profile, updateProfile } = useAuth()
   const { theme, setTheme } = useTheme()
   const { t } = useI18n()
+  const { toasts, pushToast, removeToast } = useToasts()
   const [fullName, setFullName] = useState(profile?.full_name ?? '')
   const [saving, setSaving] = useState(false)
   const [cleanupOpen, setCleanupOpen] = useState(false)
   const [cleanupLoading, setCleanupLoading] = useState(false)
-  const [message, setMessage] = useState<MessageState>(null)
 
   const [telegramEnabled, setTelegramEnabled] = useState(false)
   const [telegramChatId, setTelegramChatId] = useState('')
@@ -58,7 +58,6 @@ export default function SettingsPage() {
   async function handleTelegramReportSave() {
     if (!accessToken) return
     setTelegramSaving(true)
-    setMessage(null)
     const payload: TelegramReportSettingsUpdate = {
       enabled: telegramEnabled,
       telegram_chat_id: telegramChatId.trim() || null,
@@ -70,9 +69,9 @@ export default function SettingsPage() {
     }
     try {
       await updateTelegramReportSettings(payload, accessToken)
-      setMessage({ key: 'settings.telegramReportSaved' })
-    } catch (error) {
-      setMessage({ key: 'settings.telegramReportSaveFailed' })
+      pushToast('success', t('settings.telegramReportSaved'))
+    } catch {
+      pushToast('error', t('settings.telegramReportSaveFailed'))
     } finally {
       setTelegramSaving(false)
     }
@@ -81,12 +80,15 @@ export default function SettingsPage() {
   async function handleProfileSave() {
     if (nameError) return
     setSaving(true)
-    setMessage(null)
     try {
       await updateProfile({ full_name: fullName.trim() || null })
-      setMessage({ key: 'settings.profileSaved' })
+      pushToast('success', t('settings.profileSaved'))
     } catch (error) {
-      setMessage(error instanceof Error ? { key: error.message } : { key: 'settings.profileUpdateFailed' })
+      pushToast(
+        'error',
+        t('settings.profileUpdateFailed'),
+        error instanceof Error ? error.message : undefined
+      )
     } finally {
       setSaving(false)
     }
@@ -95,13 +97,16 @@ export default function SettingsPage() {
   async function handleCleanup() {
     if (!accessToken) return
     setCleanupLoading(true)
-    setMessage(null)
     try {
       const result = await clearMyVacancies(accessToken)
-      setMessage({ key: 'settings.cleanupDone', params: { count: result.removed } })
+      pushToast('success', t('settings.cleanupDone', { count: result.removed }))
       setCleanupOpen(false)
     } catch (error) {
-      setMessage(error instanceof Error ? { key: error.message } : { key: 'settings.cleanupFailed' })
+      pushToast(
+        'error',
+        t('settings.cleanupFailed'),
+        error instanceof Error ? error.message : undefined
+      )
     } finally {
       setCleanupLoading(false)
     }
@@ -134,10 +139,22 @@ export default function SettingsPage() {
             {t('settings.currentTheme')}: {theme === 'light' ? t('settings.light') : t('settings.dark')}
           </p>
           <div className="inline-buttons">
-            <Button variant={theme === 'light' ? 'primary' : 'secondary'} onClick={() => setTheme('light')}>
+            <Button
+              variant={theme === 'light' ? 'primary' : 'secondary'}
+              onClick={() => {
+                setTheme('light')
+                pushToast('success', t('settings.themeUpdated'))
+              }}
+            >
               {t('settings.light')}
             </Button>
-            <Button variant={theme === 'dark' ? 'primary' : 'secondary'} onClick={() => setTheme('dark')}>
+            <Button
+              variant={theme === 'dark' ? 'primary' : 'secondary'}
+              onClick={() => {
+                setTheme('dark')
+                pushToast('success', t('settings.themeUpdated'))
+              }}
+            >
               {t('settings.dark')}
             </Button>
           </div>
@@ -249,7 +266,7 @@ export default function SettingsPage() {
         </Card>
       </section>
 
-      {message ? <p className="form-hint">{t(message.key, message.params)}</p> : null}
+      <ToastStack toasts={toasts} onClose={removeToast} />
       {cleanupOpen ? (
         <Modal
           title={t('settings.cleanupModalTitle')}
